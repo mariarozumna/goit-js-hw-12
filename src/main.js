@@ -4,96 +4,109 @@ import 'izitoast/dist/css/iziToast.min.css';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('.form');
-    const imageList = document.querySelector('.gallery');
-    const loader = document.createElement('div');
-    const nextBtn = document.querySelector('#next-btn');
-    
-    let currentPage = 0;
-    let searchValue = '';
-    
-    const gallery = new SimpleLightbox('.gallery a', {
-        captionsData: 'alt',
-        captionDelay: 250,
-    });
 
-    form.addEventListener('submit', handleSearch);
-    nextBtn.addEventListener('click', nextPage);
+const searchForm = document.querySelector('.search-form');
+const imageList = document.querySelector('.gallery');
+const nextBtn = document.querySelector('.next-btn');
+    
+let currentPage = 0;
+let searchValue = '';
+    
+const gallery = new SimpleLightbox('.gallery a', {
+    captionsData: 'alt',
+    captionDelay: 250,
+});
+
+searchForm.addEventListener('submit', handleSearch);
+nextBtn.addEventListener('click', nextPage);
   
-    async function handleSearch(event) {
-        event.preventDefault();
+async function handleSearch(event) {
+    event.preventDefault();
 
-        const searchInput = form.elements.input.value;
+    const searchInput = searchForm.elements.query.value;
 
-        searchValue = searchInput;
-        currentPage = 1;
+    searchValue = searchInput;
+    currentPage = 1;
 
-        nextBtn.classList.add('is-hidden');
+    nextBtn.classList.add('is-hidden');
         
-        imageList.innerHTML = '';
+    imageList.innerHTML = '';
+    // showLoader();
+if (!searchInput.trim()) {
+    iziToast.show({
+      title: '❕',
+      theme: 'light',
+      message: `Please, fill in the search field`,
+      messageSize: '20px',
+      messageColor: '#808080',
+      backgroundColor: '#e7fc44',
+      position: 'topLeft',
+      timeout: 3000,
+});
+    return;
+}
 
-        if (!searchInput.trim()) {
-            iziToast.warning({
-                title: 'Warning',
-                message: 'Please enter a search query.',
-                messageSize: '20px',
-                messageColor: '#808080',
-                backgroundColor: '#e7fc44',
-                position: 'topLeft',
-                timeout: 3000,
-            });
-            return;
-        }
+    showLoader();
 
-        showLoader();
-
-        try {
-            const response = await fetchImages(searchValue, currentPage);
-            if (response.hits.length === 0) {
-                iziToast.show({
-                    message:
-                        'Sorry, there are no images matching your search query. Please try again!',
-                    messageSize: '16px',
-                    messageColor: 'white',
-                    backgroundColor: '#EF4040',
-                    position: 'topRight',
-                    timeout: 5000,
-                });
-                form.reset();
-                return;
-            }
-            imageList.innerHTML = createMarkup(response.hits);
-            gallery.refresh();
+try {
+    const response = await fetchImages(searchValue, currentPage);
+if (response.hits.length === 0) {
+    iziToast.show({
+        message:
+            'Sorry, there are no images matching your search query. Please try again!',
+        messageSize: '16px',
+        messageColor: 'white',
+        backgroundColor: '#EF4040',
+        position: 'topRight',
+        timeout: 5000,
+});
+    searchForm.reset();
+    return;
+}
+    imageList.innerHTML = createMarkup(response.hits);
+    gallery.refresh();
             
-            if (response.hits.length >= 40) {
-                nextBtn.classList.remove('is-hidden');
-            }
+if (response.hits.length >= 40) {
+    nextBtn.classList.remove('is-hidden');
+}  else {
+    iziToast.show({
+        title: '❕',
+        theme: 'dark',
+        message: "We're sorry, but you've reached the end of search results.",
+        messageSize: '16px',
+        messageColor: 'white',
+        backgroundColor: '#4e75ff',
+        position: 'topRight',
+        timeout: 5000,
+});
 
-            scrollBy();
-            form.reset();
-        } catch (err) {
-            handleError(err);
-        } finally {
-            hideLoader();
-        }
     }
 
-    async function fetchImages(value, page) {
-        const BASE_URL = 'https://pixabay.com/api/';
-        const KEY = '41927866-cfb01af7ede59fae11104cea9';
+        scrollBy();
+        searchForm.reset();
+    } catch (err) {
+        handleError(err);
+    } finally {
+        hideLoader();
+            // nextBtn.classList.add('is-hidden');
+    }
+}
 
-        const res = await axios.get(BASE_URL, {
-            params: {
-                key: KEY,
-                q: value,
-                image_type: 'photo',
-                orientation: 'horizontal',
-                safesearch: true,
-                per_page: 40,
-                page: page,
-            },
-        });
+async function fetchImages(query, page) {
+    const BASE_URL = 'https://pixabay.com/api/';
+    const KEY = '41927866-cfb01af7ede59fae11104cea9';
+
+    const res = await axios.get(BASE_URL, {
+    params: {
+        key: KEY,
+        q: query,
+        image_type: 'photo',
+        orientation: 'horizontal',
+        safesearch: true,
+        per_page: 40,
+        page: page,
+    },
+});
       
         return res.data;
     }
@@ -129,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error(err);
         imageList.innerHTML = '';
         iziToast.show({
-            iconUrl: icon,
+            // iconUrl: icon,
             theme: 'dark',
             message: err.stack,
             messageSize: '16px',
@@ -140,55 +153,62 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         nextBtn.removeEventListener('click', nextPage);
         nextBtn.classList.add('is-hidden');
-    }
-
-
-    function showLoader() {
-        loader.classList.remove('hidden');
-    }
-    function hideLoader() {
-        loader.classList.add('hidden');
-    }
-
-    async function nextPage() {
+}
+    
+async function nextPage() {
     loader.classList.remove('is-hidden');
     nextBtn.classList.add('is-hidden');
     currentPage += 1;
-
-    try {
-     const res = await fetchImages(searchValue, currentPage);
+    showLoader();
+    
+try {
+    const res = await fetchImages(searchValue, currentPage);
 
     if (currentPage * 40 >= res.totalHits) {
-     iziToast.show({
-      title: '❕',
-      theme: 'dark',
-      message: "We're sorry, but you've reached the end of search results.",
-      messageSize: '16px',
-      messageColor: 'white',
-      backgroundColor: '#4e75ff',
-      position: 'topRight',
-      timeout: 5000,
-    });
-        imageList.innerHTML += createMarkup(res.hits);
+        iziToast.show({
+           title: '❕',
+           theme: 'dark',
+           message: "We're sorry, but you've reached the end of search results.",
+           messageSize: '16px',
+           messageColor: 'white',
+           backgroundColor: '#4e75ff',
+           position: 'topRight',
+           timeout: 5000,
+});
+
+if (res.hits.length > 0) {
+        imageList.insertAdjacentHTML('beforeend', createMarkup(res.hits));
         gallery.refresh();
         nextBtn.classList.add('is-hidden');
-
         scrollBy();
-
         return;
     }
-
-        imageList.innerHTML += createMarkup(res.hits);
+} else {
+        imageList.insertAdjacentHTML('beforeend', createMarkup(res.hits));
         gallery.refresh();
-
         scrollBy();
-
         nextBtn.classList.remove('is-hidden');
-    } catch (err) {
+}
+} catch (err) {
         handleError(err);
-    } finally {
+} finally {
+        hideLoader();
         loader.classList.add('is-hidden');
     }
 }
-});
+const loader = document.querySelector('.loader');
+function hideLoader() {
+    setTimeout(() => {
+    loader.style.display = 'none';
+  }, 500);
+}
 
+function showLoader() {
+  loader.style.display = 'block';
+}
+function scrollBy() {
+  window.scrollBy({
+    top: 640,
+    behavior: 'smooth',
+  });
+}
