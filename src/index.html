@@ -12,21 +12,23 @@
     <link rel="stylesheet" href="./css/styles.css" />
   </head>
   <body>
-    <form class="search-form">
-      <input
-        type="text"
-        class="input"
-        name="query"
-        placeholder="Search images"
-      />
-      <button type="submit" class="search-btn">Search</button>
-    </form>
+    <div class="container">
+      <form class="search-form">
+        <input
+          type="text"
+          class="input"
+          name="query"
+          placeholder="Search images"
+        />
+        <button type="submit" class="search-btn">Search</button>
+      </form>
 
-    <ul class="gallery"></ul>
+      <ul class="gallery"></ul>
 
-    <span class="loader"></span>
+      <span class="loader hidden"></span>
 
-    <button type="submit" class="next-btn button is-hidden">Load more</button>
+      <button type="submit" class="next-btn button is-hidden">Load more</button>
+    </div>
     <script type="module" src="./main.js"></script>
   </body>
 </html>
