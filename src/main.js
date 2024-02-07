@@ -53,6 +53,7 @@ if (response.hits.length >= 40) {
     handleError(err);
 } finally {
     hideLoader();
+    refs.loader.classList.add('hidden');
 }
 }
 
@@ -74,7 +75,7 @@ const res = await axios.get(BASE_URL, {
 }
 
 async function nextPage() {
-    refs.loader.classList.remove('is-hidden');
+    refs.loader.classList.remove('hidden');
     refs.nextBtn.classList.add('is-hidden');
     currentPage += 1;
     showLoader();    
@@ -100,7 +101,7 @@ if (res.hits.length > 0) {
     handleError(err);
 } finally {
     hideLoader();
-    refs.loader.classList.add('is-hidden');
+    refs.loader.classList.add('hidden');
     }
 }
 
